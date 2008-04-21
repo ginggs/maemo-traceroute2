@@ -1,0 +1,48 @@
+#!/bin/sh /usr/share/dpatch/dpatch-run
+## 02-path.dpatch by Daniel Baumann <daniel@debian.org>
+##
+## DP: Adjust path.
+
+@DPATCH@
+
+diff -Naur traceroute-2.0.8.orig/wrappers/lft traceroute-2.0.8/wrappers/lft
+--- traceroute-2.0.8.orig/wrappers/lft	2007-08-10 15:47:50.000000000 +0000
++++ traceroute-2.0.8/wrappers/lft	2007-08-25 07:30:56.000000000 +0000
+@@ -113,5 +113,5 @@
+ 
+ opts="$method $opts"
+ 
+-exec /bin/traceroute $opts $host $length
++exec /usr/bin/traceroute.db $opts $host $length
+ 
+diff -Naur traceroute-2.0.8.orig/wrappers/tcptraceroute traceroute-2.0.8/wrappers/tcptraceroute
+--- traceroute-2.0.8.orig/wrappers/tcptraceroute	2007-08-07 15:58:21.000000000 +0000
++++ traceroute-2.0.8/wrappers/tcptraceroute	2007-08-25 07:31:04.000000000 +0000
+@@ -68,5 +68,5 @@
+     shift
+ }
+ 
+-exec /bin/traceroute $opts $host $length
++exec /usr/bin/traceroute.db $opts $host $length
+ 
+diff -Naur traceroute-2.0.8.orig/wrappers/traceproto traceroute-2.0.8/wrappers/traceproto
+--- traceroute-2.0.8.orig/wrappers/traceproto	2007-08-10 15:50:23.000000000 +0000
++++ traceroute-2.0.8/wrappers/traceproto	2007-08-25 07:31:11.000000000 +0000
+@@ -122,6 +122,6 @@
+ while [ "$cont" -gt 0 ]
+ do
+     cont=$(($cont - 1))
+-    /bin/traceroute $opts $host $length
++    /usr/bin/traceroute.db $opts $host $length
+ done
+ 
+diff -Naur traceroute-2.0.8.orig/wrappers/traceroute-nanog traceroute-2.0.8/wrappers/traceroute-nanog
+--- traceroute-2.0.8.orig/wrappers/traceroute-nanog	2007-08-10 15:51:25.000000000 +0000
++++ traceroute-2.0.8/wrappers/traceroute-nanog	2007-08-25 07:31:20.000000000 +0000
+@@ -71,5 +71,5 @@
+ 
+ [ -z "$spray" ] && opts="$opts -N 1"
+ 
+-exec /bin/traceroute $opts $1 $2
++exec /usr/bin/traceroute.db $opts $1 $2
+ 

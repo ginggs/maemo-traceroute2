@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -e
+
+case "${1}" in
+	configure)
+		update-alternatives --install \
+			/usr/bin/traceroute traceroute /usr/bin/traceroute.db 100 \
+			--slave /usr/sbin/traceroute traceroute.sbin \
+				/usr/bin/traceroute.db \
+			--slave /usr/share/man/man8/traceroute.8.gz traceroute.8.gz \
+				/usr/share/man/man8/traceroute.db.8.gz
+
+		for ALTERNATIVE in tracert traceroute6 lft tcptraceroute traceproto traceroute-nanog
+		do
+			update-alternatives --install \
+				/usr/bin/${ALTERNATIVE} ${ALTERNATIVE} /usr/bin/${ALTERNATIVE}.db 100 \
+				--slave /usr/share/man/man8/${ALTERNATIVE}.8.gz ${ALTERNATIVE}.8.gz \
+					/usr/share/man/man8/${ALTERNATIVE}.db.8.gz
+		done
+		;;
+
+	abort-upgrade|abort-remove|abort-deconfigure)
+
+		;;
+
+	*)
+		echo "postinst called with unknown argument \`${1}'" >&2
+		exit 1
+		;;
+esac
+
+#DEBHELPER#
+
+exit 0

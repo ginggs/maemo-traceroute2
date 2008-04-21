@@ -1,0 +1,92 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+include /usr/share/dpatch/dpatch.make
+
+CFLAGS = -Wall -g
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
+
+DEB_HOST_GNU_TYPE=$(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE=$(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+ifneq ($(DEB_HOST_GNU_TYPE),$(DEB_BUILD_GNU_TYPE))
+	CROSS=CC=$(DEB_HOST_GNU_TYPE)-gcc LDFLAGS=-L../libsupp/
+else
+	CROSS=
+endif
+
+build: build-stamp
+build-stamp: patch
+	dh_testdir
+
+	# Building package
+	CFLAGS="$(CFLAGS)" $(MAKE) $(CROSS)
+
+	touch build-stamp
+
+clean: unpatch
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp
+
+	# Cleaning package
+	[ ! -f Makefile ] || $(MAKE) distclean
+
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	# Installing package
+	install -D -m 0755 traceroute/traceroute debian/traceroute/usr/bin/traceroute.db
+	install -D -m 0644 traceroute/traceroute.8 debian/traceroute/usr/share/man/man8/traceroute.db.8
+
+	install -D -m 0644 libsupp/libsupp.a debian/traceroute/usr/lib/libsupp.a
+	install -D -m 0644 libsupp/clif.h debian/traceroute/usr/include/clif.h
+
+	# Installing symlinks
+	install -d -m 0755 debian/traceroute/usr/share/man/man8
+
+	set -e; for ALTERNATIVE in tracert traceroute6; \
+	do \
+		ln -s traceroute.db debian/traceroute/usr/bin/$$ALTERNATIVE.db; \
+		ln -s traceroute.db.8.gz debian/traceroute/usr/share/man/man8/$$ALTERNATIVE.db.8.gz; \
+	done
+
+	# Installing wrappers
+	set -e; for WRAPPER in lft tcptraceroute traceproto traceroute-nanog; \
+	do \
+		install -D -m 0755 wrappers/$$WRAPPER debian/traceroute/usr/bin/$$WRAPPER.db; \
+		ln -s traceroute.db.8.gz debian/traceroute/usr/share/man/man8/$$WRAPPER.db.8.gz; \
+	done
+
+binary-indep: build install
+
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs ChangeLog
+	dh_installdocs
+	dh_install
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install

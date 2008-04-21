@@ -1,0 +1,266 @@
+traceroute (2.0.10-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Mon, 21 Apr 2008 12:20:00 +0200
+
+traceroute (2.0.9-4) unstable; urgency=low
+
+  * Added versioned conflicts against tcptraceroute.
+  * Update standards version.
+  * Removed debian/TODO; all done.
+
+ -- Daniel Baumann <daniel@debian.org>  Sun, 23 Dec 2007 11:10:00 +0100
+
+traceroute (2.0.9-3) unstable; urgency=low
+
+  * Applying patch from Neil Williams <codehelp@debian.org> to add cross build
+    support (Closes: #451851).
+
+ -- Daniel Baumann <daniel@debian.org>  Sun, 18 Nov 2007 22:58:00 +0100
+
+traceroute (2.0.9-2) unstable; urgency=medium
+
+  * Adding versioned conflict against traceroute-nanog (Closes: #446305).
+
+ -- Daniel Baumann <daniel@debian.org>  Thu, 11 Oct 2007 23:49:00 +0200
+
+traceroute (2.0.9-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Tue,  9 Oct 2007 11:20:00 +0200
+
+traceroute (2.0.9~rc1-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Fri,  7 Sep 2007 23:36:00 +0200
+
+traceroute (2.0.8-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Tue,  4 Sep 2007 21:48:00 +0200
+
+traceroute (2.0.8~rc2-1) unstable; urgency=low
+
+  * New upstream release.
+  * Added forgotten symlinks for traceroute6 (Closes: #439782).
+
+ -- Daniel Baumann <daniel@debian.org>  Wed, 29 Aug 2007 07:49:00 +0200
+
+traceroute (2.0.8~rc1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Baumann <daniel@debian.org>  Sat, 25 Aug 2007 08:28:00 +0200
+
+traceroute (2.0.7-4) unstable; urgency=low
+
+  * Complying with policy (Closes: #436698, #437815).
+
+ -- Daniel Baumann <daniel@debian.org>  Tue, 15 Aug 2007 21:51:00 +0200
+
+traceroute (2.0.7-3) unstable; urgency=low
+
+  * Added conflicts/replaces to tcptraceroute (Closes: #436648).
+  * Added conflicts/replaces to iputils-tracepath (Closes: #436698).
+
+ -- Daniel Baumann <daniel@debian.org>  Wed,  8 Aug 2007 22:09:00 +0200
+
+traceroute (2.0.7-2) unstable; urgency=low
+
+  * Including tcptracroute wrapper script.
+
+ -- Daniel Baumann <daniel@debian.org>  Wed,  8 Aug 2007 02:05:00 +0200
+
+traceroute (2.0.7-1) unstable; urgency=low
+
+  * Replacing traceroute from BSD with traceroute from Dmitry K. Butskoy.
+  * Dropping obsolete alternatives.
+
+ -- Daniel Baumann <daniel@debian.org>  Wed,  8 Aug 2007 01:16:00 +0200
+
+traceroute (1.4a12-21) unstable; urgency=low
+
+  * New maintainer (Closes: #400088).
+  * Adjusted package to my own packaging style.
+  * Bumped policy version.
+
+ -- Daniel Baumann <daniel@debian.org>  Thu, 23 Nov 2006 21:37:00 +0100
+
+traceroute (1.4a12-20) unstable; urgency=medium
+
+  * Apply a patch to prevent bus errors on Sparc. (closes: #320120)
+
+ -- Graham Wilson <graham@debian.org>  Tue, 30 Aug 2005 15:19:55 +0000
+
+traceroute (1.4a12-19) unstable; urgency=low
+
+  * Change from Michael Banck to work on Hurd. (closes: #288104)
+  * Change autogen.sh script to use latest autoconf.
+  * Update debhlper compat level to 4.
+  * Bump standards version. No changes.
+
+ -- Graham Wilson <graham@debian.org>  Mon, 11 Jul 2005 00:00:33 +0000
+
+traceroute (1.4a12-18) unstable; urgency=medium
+
+  * Fix a size calculation error in findsaddr. (closes: #283591)
+
+ -- Graham Wilson <graham@debian.org>  Wed, 01 Dec 2004 01:05:12 +0000
+
+traceroute (1.4a12-17) experimental; urgency=low
+
+  * Correctly set SO_DEBUG and SO_DONTROUTE socket options.
+    (closes: #278425)
+
+ -- Graham Wilson <graham@debian.org>  Wed, 03 Nov 2004 03:20:17 +0000
+
+traceroute (1.4a12-16) unstable; urgency=low
+
+  * Don't set priority on the binary packge, and set the source package
+    priority to important.
+  * Add a watch file for uscan.
+  * Don't use a full stop in the short description.
+
+ -- Graham Wilson <graham@debian.org>  Sun, 25 Jul 2004 18:38:16 +0000
+
+traceroute (1.4a12-15) unstable; urgency=low
+
+  * New mainainer. Thanks Herbert.
+  * Don't build auto* files while building.
+
+ -- Graham Wilson <graham@debian.org>  Mon, 24 May 2004 05:12:34 +0000
+
+traceroute (1.4a12-14) unstable; urgency=low
+
+  * Fixed priority disparity.
+  * Removed suggestion of obsolete pchar package (closes: #231165).
+  * Restored reference to pathchar.
+
+ -- Herbert Xu <herbert@debian.org>  Sat, 20 Mar 2004 19:37:22 +1100
+
+traceroute (1.4a12-13) unstable; urgency=low
+
+  * Fixed rta_len setting.
+  * Removed build-stamp/install-stamp.
+  * Fixed UDP checksum when IP options are present (closes: #212663).
+  * findsaddr-linux: Check pid.
+  * findsaddr-linux: Handle EINTR for send.
+
+ -- Herbert Xu <herbert@debian.org>  Sat, 11 Oct 2003 21:44:53 +1000
+
+traceroute (1.4a12-12) unstable; urgency=low
+
+  * Use alternatives.
+
+ -- Herbert Xu <herbert@debian.org>  Sat, 11 Jan 2003 11:30:07 +1100
+
+traceroute (1.4a12-11) unstable; urgency=low
+
+  * Use config.* from autotools-dev instead of automake.
+  * Refer to pchar instead of pathchar (closes: #171727).
+  * Suggest the pchar package.
+
+ -- Herbert Xu <herbert@debian.org>  Sun,  5 Jan 2003 08:09:28 +1100
+
+traceroute (1.4a12-10) unstable; urgency=low
+
+  * Documented traceroute warning when rtnetlink fails.
+  * Fixed documentation about the base port (closes: #162484).
+
+ -- Herbert Xu <herbert@debian.org>  Mon, 21 Oct 2002 21:09:26 +1000
+
+traceroute (1.4a12-9) unstable; urgency=low
+
+  * Disable UDP checksum if findsaddr fails.
+
+ -- Herbert Xu <herbert@debian.org>  Sat, 23 Mar 2002 10:22:01 +1100
+
+traceroute (1.4a12-8) unstable; urgency=low
+
+  * Removed dependency on iproute.
+
+ -- Herbert Xu <herbert@debian.org>  Thu, 21 Mar 2002 21:42:28 +1100
+
+traceroute (1.4a12-7) unstable; urgency=low
+
+  * Use netlink directly (closes: #139303, #139124).
+  * Bind to device when -i is specified.
+  * Always bind IP address to help routing.
+
+ -- Herbert Xu <herbert@debian.org>  Thu, 21 Mar 2002 21:11:46 +1100
+
+traceroute (1.4a12-6) unstable; urgency=low
+
+  * Moved traceroute to /usr/bin.
+  * Removed USE_KERNEL_ROUTING_TABLE crap.
+  * Use ip ro get to get the source address (closes: #105502).
+    Patches to do this within traceroute are welcome.
+
+ -- Herbert Xu <herbert@debian.org>  Tue, 19 Mar 2002 22:11:27 +1100
+
+traceroute (1.4a12-5) unstable; urgency=low
+
+  * Restrict the -s option to the super-user.
+  * Updated documentation for the -s option (closes: #105362).
+
+ -- Herbert Xu <herbert@debian.org>  Mon, 16 Jul 2001 19:28:45 +1000
+
+traceroute (1.4a12-4) unstable; urgency=low
+
+  * Updated aclocal.m4 for autoconf 2.50 (closes: #98367).
+
+ -- Herbert Xu <herbert@debian.org>  Wed, 23 May 2001 18:48:59 +1000
+
+traceroute (1.4a12-3) unstable; urgency=low
+
+  * Drop privileges earlier.
+  * Applied "paranoia" patch from Richard Kettlewell (closes: #85619).
+    - eliminate unbounded sprintf calls
+    - eliminate unbounded sscanf calls
+    - strncpy final-null paranoia
+  * Set HAVE_RAW_OPTIONS (closes: #78475).
+  * Added missing option to usage (Neale Banks, closes: #88892).
+
+ -- Herbert Xu <herbert@debian.org>  Fri,  9 Mar 2001 22:24:11 +1100
+
+traceroute (1.4a12-2) unstable; urgency=low
+
+  * Made changes for dpkg-statoverride (closes: #83817).
+
+ -- Herbert Xu <herbert@debian.org>  Sun, 28 Jan 2001 21:49:35 +1100
+
+traceroute (1.4a12-1) unstable; urgency=low
+
+  * New upstream release (closes: #79920, #81395).
+  * Use struct sockaddr_stroage (closes: #79348).
+
+ -- Herbert Xu <herbert@debian.org>  Fri, 26 Jan 2001 20:57:21 +1100
+
+traceroute (1.4a8-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Herbert Xu <herbert@debian.org>  Sat,  9 Dec 2000 14:18:00 +1100
+
+traceroute (1.4a5-3) stable unstable; urgency=low
+
+  * Fixed a bug where free(3) was called on non-malloced memory.
+
+ -- Herbert Xu <herbert@debian.org>  Thu, 24 Aug 2000 20:44:51 +1000
+
+traceroute (1.4a5-2) frozen unstable; urgency=low
+
+  * Use config.* from automake, needed for building traceroute on ARM
+    (closes: #61267).
+
+ -- Herbert Xu <herbert@debian.org>  Fri, 31 Mar 2000 07:50:33 +1000
+
+traceroute (1.4a5-1) unstable; urgency=low
+
+  * Initial release (closes: #34166).
+
+ -- Herbert Xu <herbert@debian.org>  Mon,  1 Nov 1999 15:11:06 +1100
