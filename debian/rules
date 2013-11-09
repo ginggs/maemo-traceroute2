@@ -19,11 +19,12 @@ DEB_BUILD_GNU_TYPE=$(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 ifneq ($(DEB_HOST_GNU_TYPE),$(DEB_BUILD_GNU_TYPE))
 	CROSS=CC=$(DEB_HOST_GNU_TYPE)-gcc LDFLAGS=-L../libsupp/
 else
-	CROSS=
+	CROSS=LDFLAGS="-L../libsupp/ -Wl,--as-needed"
 endif
 
+
 build: build-stamp
-build-stamp: patch
+build-stamp:
 	dh_testdir
 
 	# Building package
@@ -31,7 +32,7 @@ build-stamp: patch
 
 	touch build-stamp
 
-clean: unpatch
+clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
@@ -48,27 +49,39 @@ install: build
 	dh_installdirs
 
 	# Installing package
-	install -D -m 0755 traceroute/traceroute debian/traceroute/usr/bin/traceroute.db
-	install -D -m 0644 traceroute/traceroute.8 debian/traceroute/usr/share/man/man8/traceroute.db.8
+	install -D -m 0755 traceroute/traceroute debian/traceroute2/usr/bin/traceroute.db
+	install -D -m 0644 traceroute/traceroute.8 debian/traceroute2/usr/share/man/man1/traceroute.db.1
 
-	install -D -m 0644 libsupp/libsupp.a debian/traceroute/usr/lib/libsupp.a
-	install -D -m 0644 libsupp/clif.h debian/traceroute/usr/include/clif.h
+	install -D -m 0755 wrappers/traceroute-nanog debian/traceroute2/usr/bin/traceroute-nanog
+	ln -s traceroute.db.1.gz debian/traceroute2/usr/share/man/man1/traceroute-nanog.1.gz
+
+	install -D -m 0644 libsupp/libsupp.a debian/traceroute2/usr/lib/libsupp.a
+	install -D -m 0644 libsupp/clif.h debian/traceroute2/usr/include/clif.h
 
 	# Installing symlinks
-	install -d -m 0755 debian/traceroute/usr/share/man/man8
+	mkdir -p debian/traceroute2/usr/share/man/man1
 
-	set -e; for ALTERNATIVE in tracert traceroute6; \
+	for _ALTERNATIVE in traceroute6; \
 	do \
-		ln -s traceroute.db debian/traceroute/usr/bin/$$ALTERNATIVE.db; \
-		ln -s traceroute.db.8.gz debian/traceroute/usr/share/man/man8/$$ALTERNATIVE.db.8.gz; \
+		ln -s traceroute.db debian/traceroute2/usr/bin/$${_ALTERNATIVE}.db; \
+		ln -s traceroute.db.1.gz debian/traceroute2/usr/share/man/man1/$${_ALTERNATIVE}.db.1.gz; \
 	done
 
 	# Installing wrappers
-	set -e; for WRAPPER in lft tcptraceroute traceproto traceroute-nanog; \
+	for _WRAPPER in lft traceproto; \
 	do \
-		install -D -m 0755 wrappers/$$WRAPPER debian/traceroute/usr/bin/$$WRAPPER.db; \
-		ln -s traceroute.db.8.gz debian/traceroute/usr/share/man/man8/$$WRAPPER.db.8.gz; \
+		install -D -m 0755 wrappers/$${_WRAPPER} debian/traceroute2/usr/bin/$${_WRAPPER}.db; \
+		ln -s traceroute.db.1.gz debian/traceroute2/usr/share/man/man1/$${_WRAPPER}.db.1.gz; \
 	done
+
+	mkdir -p debian/traceroute2/usr/share/man/man8
+
+	for _WRAPPER in tcptraceroute; \
+	do \
+		install -D -m 0755 wrappers/$${_WRAPPER} debian/traceroute2/usr/sbin/$${_WRAPPER}.db; \
+		ln -s ../man1/traceroute.db.1.gz debian/traceroute2/usr/share/man/man8/$${_WRAPPER}.db.8.gz; \
+	done
+
 
 binary-indep: build install
 

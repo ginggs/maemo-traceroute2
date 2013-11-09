@@ -1,15 +1,19 @@
-Source: traceroute
-Section: net
+Source: traceroute2
+Section: user/network
 Priority: important
-Maintainer: Daniel Baumann <daniel@debian.org>
-Build-Depends: debhelper (>= 5), dpatch
+Maintainer: Graham Inggs <graham@nerve.org.za>
+XSBC-Original-Maintainer: Luk Claes <luk@debian.org>
+Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.3
-Homepage: http://dmitry.butskoy.name/traceroute/
+Homepage: http://traceroute.sourceforge.net/
 
-Package: traceroute
+Package: traceroute2
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Conflicts: tcptraceroute (<< 1.5beta6-2.1), traceroute-nanog (<< 6.4.2-1), traceproto (<< 1.1.2beta1-3)
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Conflicts: tcptraceroute (<< 1.5beta6-2.1),
+           traceproto (<< 1.1.2beta1-3),
+           traceroute (<< 2.0.7-1),
+           traceroute-nanog (<< 6.4.2-1)
 Description: Traces the route taken by packets over an IPv4/IPv6 network
  The traceroute utility displays the route used by IP packets on their way to a
  specified network (or Internet) host. Traceroute displays the IP number and
@@ -20,3 +24,79 @@ Description: Traces the route taken by packets over an IPv4/IPv6 network
  .
  Install traceroute if you need a tool for diagnosing network connectivity
  problems.
+ .
+ This application can only be executed from the command line.
+XSBC-Bugtracker: https://garage.maemo.org/tracker/?group_id=2382
+XB-Maemo-Display-Name: Traceroute for Linux
+XB-Maemo-Icon-26:
+ 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
+ YII=

@@ -1,8 +1,16 @@
+traceroute2 (2.0.18-0maemo1) fremantle; urgency=low
+
+  * Packaged for Maemo.
+  * New upstream release 2.0.18.
+  * Merge changes from traceroute 1:2.0.19-3 in Debian.
+
+ -- Graham Inggs <graham@nerve.org.za>  Sat, 09 Nov 2013 14:35:09 +0200
+
 traceroute (2.0.10-1) unstable; urgency=low
 
   * New upstream release.
 
- -- Daniel Baumann <daniel@debian.org>  Mon, 21 Apr 2008 12:20:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Mon, 21 Apr 2008 12:20:00 +0200
 
 traceroute (2.0.9-4) unstable; urgency=low
 
@@ -10,77 +18,77 @@ traceroute (2.0.9-4) unstable; urgency=low
   * Update standards version.
   * Removed debian/TODO; all done.
 
- -- Daniel Baumann <daniel@debian.org>  Sun, 23 Dec 2007 11:10:00 +0100
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Sun, 23 Dec 2007 11:10:00 +0100
 
 traceroute (2.0.9-3) unstable; urgency=low
 
   * Applying patch from Neil Williams <codehelp@debian.org> to add cross build
     support (Closes: #451851).
 
- -- Daniel Baumann <daniel@debian.org>  Sun, 18 Nov 2007 22:58:00 +0100
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Sun, 18 Nov 2007 22:58:00 +0100
 
 traceroute (2.0.9-2) unstable; urgency=medium
 
   * Adding versioned conflict against traceroute-nanog (Closes: #446305).
 
- -- Daniel Baumann <daniel@debian.org>  Thu, 11 Oct 2007 23:49:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Thu, 11 Oct 2007 23:49:00 +0200
 
 traceroute (2.0.9-1) unstable; urgency=low
 
   * New upstream release.
 
- -- Daniel Baumann <daniel@debian.org>  Tue,  9 Oct 2007 11:20:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Tue,  9 Oct 2007 11:20:00 +0200
 
 traceroute (2.0.9~rc1-1) unstable; urgency=medium
 
   * New upstream release.
 
- -- Daniel Baumann <daniel@debian.org>  Fri,  7 Sep 2007 23:36:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Fri,  7 Sep 2007 23:36:00 +0200
 
 traceroute (2.0.8-1) unstable; urgency=low
 
   * New upstream release.
 
- -- Daniel Baumann <daniel@debian.org>  Tue,  4 Sep 2007 21:48:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Tue,  4 Sep 2007 21:48:00 +0200
 
 traceroute (2.0.8~rc2-1) unstable; urgency=low
 
   * New upstream release.
   * Added forgotten symlinks for traceroute6 (Closes: #439782).
 
- -- Daniel Baumann <daniel@debian.org>  Wed, 29 Aug 2007 07:49:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Wed, 29 Aug 2007 07:49:00 +0200
 
 traceroute (2.0.8~rc1-1) unstable; urgency=low
 
   * New upstream release.
 
- -- Daniel Baumann <daniel@debian.org>  Sat, 25 Aug 2007 08:28:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Sat, 25 Aug 2007 08:28:00 +0200
 
 traceroute (2.0.7-4) unstable; urgency=low
 
   * Complying with policy (Closes: #436698, #437815).
 
- -- Daniel Baumann <daniel@debian.org>  Tue, 15 Aug 2007 21:51:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Tue, 15 Aug 2007 21:51:00 +0200
 
 traceroute (2.0.7-3) unstable; urgency=low
 
   * Added conflicts/replaces to tcptraceroute (Closes: #436648).
   * Added conflicts/replaces to iputils-tracepath (Closes: #436698).
 
- -- Daniel Baumann <daniel@debian.org>  Wed,  8 Aug 2007 22:09:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Wed,  8 Aug 2007 22:09:00 +0200
 
 traceroute (2.0.7-2) unstable; urgency=low
 
   * Including tcptracroute wrapper script.
 
- -- Daniel Baumann <daniel@debian.org>  Wed,  8 Aug 2007 02:05:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Wed,  8 Aug 2007 02:05:00 +0200
 
 traceroute (2.0.7-1) unstable; urgency=low
 
   * Replacing traceroute from BSD with traceroute from Dmitry K. Butskoy.
   * Dropping obsolete alternatives.
 
- -- Daniel Baumann <daniel@debian.org>  Wed,  8 Aug 2007 01:16:00 +0200
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Wed,  8 Aug 2007 01:16:00 +0200
 
 traceroute (1.4a12-21) unstable; urgency=low
 
@@ -88,7 +96,7 @@ traceroute (1.4a12-21) unstable; urgency=low
   * Adjusted package to my own packaging style.
   * Bumped policy version.
 
- -- Daniel Baumann <daniel@debian.org>  Thu, 23 Nov 2006 21:37:00 +0100
+ -- Daniel Baumann <mail@daniel-baumann.ch>  Thu, 23 Nov 2006 21:37:00 +0100
 
 traceroute (1.4a12-20) unstable; urgency=medium
 
