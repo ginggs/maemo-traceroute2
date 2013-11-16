@@ -23,8 +23,8 @@
 static sockaddr_any dest_addr = {{ 0, }, };
 static int protocol = DEF_RAW_PROT;
 
-static char *data;
-static size_t data_len = 0;
+static char *data = NULL;
+static size_t *length_p;
 
 static int raw_sk = -1;
 static int last_ttl = 0;
@@ -55,7 +55,7 @@ static CLIF_option raw_options[] = {
 
 
 static int raw_init (const sockaddr_any *dest,
-				unsigned int port_seq, size_t packet_len) {
+			    unsigned int port_seq, size_t *packet_len_p) {
 	int i;
 	int af = dest->sa.sa_family;
 
@@ -65,17 +65,19 @@ static int raw_init (const sockaddr_any *dest,
 	if (port_seq)  protocol = port_seq;
 
 
-	data_len = packet_len;
-	data = malloc (data_len);
-	if (!data)  error ("malloc");
+	length_p = packet_len_p;
 
-        for (i = 0; i < data_len; i++)
+	if (*length_p &&
+	    !(data = malloc (*length_p))
+	)  error ("malloc");
+
+        for (i = 0; i < *length_p; i++)
                 data[i] = 0x40 + (i & 0x3f);
 
 
 	raw_sk = socket (af, SOCK_RAW, protocol);
 	if (raw_sk < 0)
-		error ("socket");
+		error_or_perm ("socket");
 
 	tune_socket (raw_sk);
 
@@ -105,7 +107,7 @@ static void raw_send_probe (probe *pb, int ttl) {
 
 	pb->send_time = get_time ();
 
-	if (do_send (raw_sk, data, data_len, &dest_addr) < 0) {
+	if (do_send (raw_sk, data, *length_p, &dest_addr) < 0) {
 	    pb->send_time = 0;
 	    return;
 	}
@@ -117,65 +119,34 @@ static void raw_send_probe (probe *pb, int ttl) {
 }
 
 
-static void raw_recv_probe (int sk, int revents) {
-	struct msghdr msg;
-	sockaddr_any from;
-	struct iovec iov;
-	int err;
+static probe *raw_check_reply (int sk, int err, sockaddr_any *from,
+						    char *buf, size_t len) {
 	probe *pb;
-	char buf[1024];		/*  enough, enough...  */
-	char control[1024];
 
+	if (!equal_addr (&dest_addr, from))
+		return NULL;
+
+	pb = probe_by_seq (seq);
+	if (!pb)  return NULL;
+
+	if (!err)  pb->final = 1;
+
+	return pb;
+}
+
+
+static void raw_recv_probe (int sk, int revents) {
 
 	if (!(revents & (POLLIN | POLLERR)))
 		return;
 
-	err = !!(revents & POLLERR);
-
-
-	memset (&msg, 0, sizeof (msg));
-	msg.msg_name = &from;
-	msg.msg_namelen = sizeof (from);
-	msg.msg_control = control;
-	msg.msg_controllen = sizeof (control);
-	iov.iov_base = buf;
-	iov.iov_len = sizeof (buf);
-	msg.msg_iov = &iov;
-	msg.msg_iovlen = 1;
-
-
-	if (recvmsg (sk, &msg, err ? MSG_ERRQUEUE : 0) < 0)
-		return;
-
-	if (!equal_addr (&dest_addr, &from))
-		return;
-
-
-	pb = probe_by_seq (seq);
-	if (!pb)  return;
-
-
-	parse_cmsg (pb, &msg);	/*  err (if any), tstamp, ttl   */
-
-	if (!err) {
-
-	    memcpy (&pb->res, &from, sizeof (pb->res));
-
-	    pb->final = 1;
-	}
-
-
-	pb->seq = -1;
-
-	pb->done = 1;
+	recv_reply (sk, !!(revents & POLLERR), raw_check_reply);
 }
 
 
 static void raw_expire_probe (probe *pb) {
 
-	pb->seq = -1;
-
-	pb->done = 1;
+	probe_done (pb);
 }
 
 
@@ -186,7 +157,6 @@ static tr_module raw_ops = {
 	.recv_probe = raw_recv_probe,
 	.expire_probe = raw_expire_probe,
 	.options = raw_options,
-	.user = 0,
 	.one_per_time = 1,
 };
 

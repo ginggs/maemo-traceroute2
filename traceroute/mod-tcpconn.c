@@ -27,7 +27,7 @@ static int icmp_sk = -1;
 
 
 static int tcp_init (const sockaddr_any *dest,
-				unsigned int port_seq, size_t packet_len) {
+			    unsigned int port_seq, size_t *packet_len_p) {
 	int af = dest->sa.sa_family;
 
 	dest_addr = *dest;
@@ -43,7 +43,7 @@ static int tcp_init (const sockaddr_any *dest,
 	icmp_sk = socket (af, SOCK_RAW, (af == AF_INET) ? IPPROTO_ICMP
 							: IPPROTO_ICMPV6);
 	if (icmp_sk < 0)
-		error ("socket");
+		error_or_perm ("socket");
 
 	/*  icmp_sk not need full tune_socket() here, just a receiving one  */
 	bind_socket (icmp_sk);
@@ -92,19 +92,88 @@ static void tcp_send_probe (probe *pb, int ttl) {
 }
 
 
-static void tcp_recv_probe (int sk, int revents) {
+static probe *tcp_check_reply (int sk, int err, sockaddr_any *from,
+						    char *buf, size_t len) {
 	int af = dest_addr.sa.sa_family;
-	struct msghdr msg;
-	sockaddr_any from;
-	struct iovec iov;
-	int n, type, code, info;
+	int type, code, info;
 	probe *pb;
-	char buf[1024];
-	char control[1024];
 	struct tcphdr *tcp;
 
 
+	if (len < sizeof (struct icmphdr))
+		return NULL;
+
+
+	if (af == AF_INET) {
+	    struct icmp *icmp = (struct icmp *) buf;
+	    struct iphdr *ip;
+	    int hlen;
+
+	    type = icmp->icmp_type;
+	    code = icmp->icmp_code;
+	    info = icmp->icmp_void;
+
+	    if (type != ICMP_TIME_EXCEEDED && type != ICMP_DEST_UNREACH)
+		    return NULL;
+
+	    if (len < sizeof (struct icmphdr) + sizeof (struct iphdr) + 8)
+		    /* `8' - rfc1122: 3.2.2  */
+		    return NULL;
+
+	    ip = (struct iphdr *) (((char *)icmp) + sizeof(struct icmphdr));
+	    hlen = ip->ihl << 2;
+
+	    if (len < sizeof (struct icmphdr) + hlen + 8)
+		    return NULL;
+	    if (ip->protocol != IPPROTO_TCP)
+		    return NULL;
+
+	    tcp = (struct tcphdr *) (((char *) ip) + hlen);
+
+	}
+	else {	    /*  AF_INET6   */
+	    struct icmp6_hdr *icmp6 = (struct icmp6_hdr *) buf;
+	    struct ip6_hdr *ip6;
+
+	    type = icmp6->icmp6_type;
+	    code = icmp6->icmp6_code;
+	    info = icmp6->icmp6_mtu;
+
+	    if (type != ICMP6_TIME_EXCEEDED &&
+		type != ICMP6_DST_UNREACH &&
+		type != ICMP6_PACKET_TOO_BIG
+	    )  return NULL;
+
+	    if (len < sizeof(struct icmp6_hdr) + sizeof(struct ip6_hdr) + 8)
+		    return NULL;
+
+	    ip6 = (struct ip6_hdr *) (icmp6 + 1);
+	    if (ip6->ip6_nxt != IPPROTO_TCP)
+		    return NULL;
+
+	    tcp = (struct tcphdr *) (ip6 + 1);
+
+	}
+
+
+	if (tcp->dest != dest_addr.sin.sin_port)
+		return NULL;
+
+	pb = probe_by_seq (tcp->source);
+	if (!pb)  return NULL;
+
+
+	/*  here only, high level has no data to do this   */
+	parse_icmp_res (pb, type, code, info);
+
+	return pb;
+}
+
+
+static void tcp_recv_probe (int sk, int revents) {
+
 	if (sk != icmp_sk) {	/*  a tcp socket   */
+	    probe *pb;
 
 	    pb = probe_by_sk (sk);
 	    if (!pb) {
@@ -126,13 +195,8 @@ static void tcp_recv_probe (int sk, int revents) {
 	    pb->final = 1;
 
 	    pb->recv_time = get_time ();
-	    del_poll (sk);
 
-	    close (sk);
-	    pb->sk = -1;
-	    pb->seq = 0;
-
-	    pb->done = 1;
+	    probe_done (pb);
 
 	    return;
 	}
@@ -143,113 +207,13 @@ static void tcp_recv_probe (int sk, int revents) {
 	if (!(revents & POLLIN))
 		return;
 
-	memset (&msg, 0, sizeof (msg));
-	msg.msg_name = &from;
-	msg.msg_namelen = sizeof (from);
-	msg.msg_control = control;
-	msg.msg_controllen = sizeof (control);
-	iov.iov_base = buf;
-	iov.iov_len = sizeof (buf);
-	msg.msg_iov = &iov;
-	msg.msg_iovlen = 1;
-
-	n = recvmsg (icmp_sk, &msg, 0);
-	if (n < sizeof (struct icmphdr))	/*  error or too short   */
-		return;
-
-
-	if (af == AF_INET) {
-	    struct iphdr *ip = (struct iphdr *) buf;
-	    int hlen = ip->ihl << 2;
-	    struct icmp *icmp;
-
-	    n -= hlen + sizeof (struct icmphdr);
-	    if (n < 0)  return;
-
-	    icmp = (struct icmp *) (buf + hlen);
-	    type = icmp->icmp_type;
-	    code = icmp->icmp_code;
-	    info = icmp->icmp_void;
-
-	    if (type == ICMP_TIME_EXCEEDED ||
-		type == ICMP_DEST_UNREACH
-	    ) {
-		if (n < sizeof (struct iphdr) + 8)  /* `8' - rfc1122: 3.2.2  */
-			return;
-
-		ip = (struct iphdr *) (((char *)icmp) + sizeof(struct icmphdr));
-		hlen = ip->ihl << 2;
-
-		if (n < hlen + 8)
-			return;
-		if (ip->protocol != IPPROTO_TCP)
-			return;
-
-		tcp = (struct tcphdr *) (((char *) ip) + hlen);
-
-	    } else
-		return;
-	}
-	else {	    /*  AF_INET6   */
-	    struct icmp6_hdr *icmp6 = (struct icmp6_hdr *) buf;
-
-	    type = icmp6->icmp6_type;
-	    code = icmp6->icmp6_code;
-	    info = icmp6->icmp6_mtu;
-
-	    if (type == ICMP6_TIME_EXCEEDED ||
-		type == ICMP6_DST_UNREACH ||
-		type == ICMP6_PACKET_TOO_BIG
-	    ) {
-		struct ip6_hdr *ip6;
-
-		if (n < sizeof (struct icmp6_hdr) + sizeof (struct ip6_hdr) + 8)
-			return;
-
-		ip6 = (struct ip6_hdr *) (icmp6 + 1);
-		if (ip6->ip6_nxt != IPPROTO_TCP)
-			return;
-
-		tcp = (struct tcphdr *) (ip6 + 1);
-
-	    } else
-		return;
-	}
-
-
-	if (tcp->dest != dest_addr.sin.sin_port)
-		return;
-
-	pb = probe_by_seq (tcp->source);
-	if (!pb)  return;
-
-
-	memcpy (&pb->res, &from, sizeof (pb->res));
-
-	parse_icmp_res (pb, type, code, info);
-
-	parse_cmsg (pb, &msg);	    /*  tstamp and ttl   */
-
-
-	pb->seq = 0;
-
-	del_poll (pb->sk);
-	close (pb->sk);
-	pb->sk = -1;
-
-	pb->done = 1;
+	recv_reply (icmp_sk, 0, tcp_check_reply);
 }
 
 
 static void tcp_expire_probe (probe *pb) {
 
-	del_poll (pb->sk);
-
-	close (pb->sk);
-	pb->sk = -1;
-	pb->seq = 0;
-
-	pb->done = 1;
+	probe_done (pb);
 }
 
 
@@ -259,7 +223,6 @@ static tr_module tcp_ops = {
 	.send_probe = tcp_send_probe,
 	.recv_probe = tcp_recv_probe,
 	.expire_probe = tcp_expire_probe,
-	.user = 0,
 };
 
 TR_MODULE (tcp_ops);

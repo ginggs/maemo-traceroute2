@@ -117,11 +117,11 @@ opts="$opts -z $sendwait"
 [ -n "$TP_RA_SERVER" -a -z "$RA_SERVER" ] && RA_SERVER=$TP_RA_SERVER
 
 
-[ -z "$cont" ] && exec /bin/traceroute $opts $host $length
+[ -z "$cont" ] && exec traceroute $opts $host $length
 
 while [ "$cont" -gt 0 ]
 do
     cont=$(($cont - 1))
-    /bin/traceroute $opts $host $length
+    traceroute $opts $host $length
 done
 

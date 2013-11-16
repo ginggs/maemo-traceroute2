@@ -57,7 +57,8 @@ do
 	-f)  opts="$opts --sport=$2"; shift 2 ;;
 	-u)  ;;
 	-$)  opts="-f 64 -m 64 -q 1"; shift ;;
-	-[MaUOvQ])  warning $1; shift ;;
+	-M)  opts="$opts --mtu"; shift ;;
+	-[aUOvQ])  warning $1; shift ;;
 	-T)  warning $1; shift 2 ;;
 	--)  shift; break ;;
 	*)  echo "$prgname: Internal parsing error" >&2; exit 2 ;;
@@ -71,5 +72,5 @@ done
 
 [ -z "$spray" ] && opts="$opts -N 1"
 
-exec /bin/traceroute $opts $1 $2
+exec traceroute $opts $1 $2
 

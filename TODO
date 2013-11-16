@@ -1,13 +1,12 @@
 * It seems that `-l' and `-g' will not work correctly together (IPv6).
 
-  Wait for "flow label" API to be appeared in glibc-kernheaders and
+  Wait for "flow label" API to be appeared in kernel-headers and
   think about it immediately after that... :)
 
 
 * Tune default parameters properly.
 
-  Maybe increase value for the `-N' (sim_probes),
-  maybe decrease `-w' secs to 4.0 instead of 5.0 (as Network is faster now).
+  Maybe decrease `-w' secs to 4.0 instead of 5.0 (as Network is faster now).
 
 
 * Verbose output. Show method in use, what ports we are connecting to,
@@ -42,8 +41,15 @@
   For IPv6 mtrace, there is an RFC draft for this already...
 
 
-* Maybe catch situations when "port unreach" is sent from the same host
-  as last ttl-exceed. It means that the last host is a firewall which filters
-  some udp/tcp ports. It seems that it is better to show some "!x" here,
-  but the original traceroute does not behave so.
+* Make the output more clean -- use two spaces before any printed address
+  (not the first one only), and use two spaces between expired probes as well.
+
+
+* Maybe implement some config file (both user and system-wide), 
+  with directives (auto)generated from the general-type long-options.
+  This could allow people to tune default parameters.
+
+  The presence of such files even makes it reasonable to add some more
+  long-options (fe. to tune the form of output), as the user can specify
+  it in configfile just at once.
 

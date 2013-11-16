@@ -27,6 +27,7 @@ struct probe_struct {
 	int recv_ttl;
 	int sk;
 	int seq;
+	char *ext;
 	char err_str[16];	/*  assume enough   */
 };
 typedef struct probe_struct probe;
@@ -36,13 +37,13 @@ struct tr_module_struct {
 	struct tr_module_struct *next;
 	const char *name;
 	int (*init) (const sockaddr_any *dest,
-				unsigned int port_seq, size_t packet_len);
+				unsigned int port_seq, size_t *packet_len);
 	void (*send_probe) (probe *pb, int ttl);
 	void (*recv_probe) (int fd, int revents);
 	void (*expire_probe) (probe *pb);
 	CLIF_option *options;	/*  per module options, if any   */
-	short user;	/*  whether applicable for non-root users   */
-	short one_per_time;	/*  no simultaneous probes   */
+	int one_per_time;	/*  no simultaneous probes   */
+	size_t header_len;	/*  additional header length (aka for udp)   */
 };
 typedef struct tr_module_struct tr_module;
 
@@ -57,11 +58,17 @@ typedef struct tr_module_struct tr_module;
 
 
 void error (const char *str) __attribute__((noreturn));
+void error_or_perm (const char *str) __attribute__((noreturn));
 
 double get_time (void);
 void tune_socket (int sk);
 void parse_icmp_res (probe *pb, int type, int code, int info);
-void parse_cmsg (probe *pb, struct msghdr *msg);
+void probe_done (probe *pb);
+
+typedef probe *(*check_reply_t) (int sk, int err, sockaddr_any *from,
+							char *buf, size_t len);
+void recv_reply (int sk, int err, check_reply_t check_reply);
+
 int equal_addr (const sockaddr_any *a, const sockaddr_any *b);
 
 probe *probe_by_seq (int seq);
@@ -78,6 +85,7 @@ void add_poll (int fd, int events);
 void del_poll (int fd);
 void do_poll (double timeout, void (*callback) (int fd, int revents));
 
+void handle_extensions (probe *pb, char *buf, int len, int step);
 const char *get_as_path (const char *query);
 
 int raw_can_connect (void);

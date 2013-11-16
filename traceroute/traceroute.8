@@ -7,7 +7,7 @@
 traceroute \- print the route packets trace to network host
 .SH SYNOPSIS
 .na
-.BR traceroute " [" \-46dFITUnrAV "] [" "\-f first_ttl" "] [" "\-g gate,..." ]
+.BR traceroute " [" \-46dFITUnreAV "] [" "\-f first_ttl" "] [" "\-g gate,..." ]
 .br
 .ti +8
 .BR "" [ "-i device" "] [" "-m max_ttl" "] [" "-p port" "] [" "-s src_addr" ]
@@ -22,15 +22,12 @@ traceroute \- print the route packets trace to network host
 .BR "" [ "-UL" "] [" "-P proto" "] [" "--sport=port" "] [" "-M method" "] [" "-O mod_options" ]
 .br
 .ti +8
-.BR host " [" "packetlen" "]"
+.BR "" [ "--mtu" "] [" "--back" ]
+.br
+.ti +8
+.BR host " [" "packet_len" "]"
 .br
 .BR traceroute6
-.RI " [" options ]
-.br
-.BR tracert
-.RI " [" options ]
-.br
-.BR tcptraceroute
 .RI " [" options ]
 .ad
 .SH DESCRIPTION
@@ -44,28 +41,15 @@ along the path to the host.
 is equivalent to
 .I traceroute
 .B \-6
-.br
-.I tracert
-is equivalent to
-.I traceroute
-.B -I
-.br
-.I tcptraceroute
-is equivalent to
-.I traceroute
-.B -T
 .PP
 The only required parameter is the name or IP address of the
 destination
 .BR host \ .
-This parameter can be followed by the
-.B size
-of the
-probing packet sent to that host (40 by default). Varying the
-size of the packet in conjunction with the
-.B \-F
-parameter can be used to obtain information about the MTU of
-individual network hops. (The size parameter is useless for TCP probes).
+The optional
+.B packet_len\fR`gth
+is the total size of the probing packet (default 60 bytes
+for IPv4 and 80 for IPv6). The specified size can be ignored
+in some situations or increased up to a minimal value.
 .PP
 This program attempts to trace the route an IP packet would follow to some
 internet host by launching probe
@@ -75,10 +59,11 @@ with a ttl of one and increase by one until we get an ICMP "port
 unreachable" (or TCP reset), which means we got to the "host", or hit a max (which
 defaults to 30 hops). Three probes (by default) are sent at each ttl setting
 and a line is printed showing the ttl, address of the gateway and
-round trip time of each probe.  If the probe answers come from
+round trip time of each probe. The address can be followed by additional
+information when requested. If the probe answers come from
 different gateways, the address of each responding system will
 be printed.  If there is no response within a 5.0 seconds (default),
-an "*" is printed for that probe.
+an "*" (asterisk) is printed for that probe.
 .PP
 After the trip time, some additional annotation can be printed:
 .BR !H ,
@@ -123,7 +108,7 @@ by firewalls just as a start of allowed type of a network session).
 Print help info and exit.
 .TP
 .BR \-4 ", " \-6
-Explicitly force IPv4 or IPv6 traceouting. By default, the program
+Explicitly force IPv4 or IPv6 tracerouting. By default, the program
 will try to resolve the name given, and choose the appropriate
 protocol automatically. If resolving a host name returns both
 IPv4 and IPv6 addresses,
@@ -140,9 +125,28 @@ Use TCP SYN for probes
 Enable socket level debugging (when the Linux kernel supports it)
 .TP
 .B \-F
-Set the "Don't Fragment" bit. This tells intermediate routers not
-to fragment the packet when they find it's too big for a network
-hop's MTU.
+Do not fragment probe packets. (For IPv4 it also sets DF bit, which tells
+intermediate routers not to fragment remotely as well).
+.br
+
+.br
+Varying the size of the probing packet by the
+.B packet_len
+command line parameter, you can manually obtain information
+about the MTU of individual network hops. The
+.B \--mtu
+option (see below) tries to do this automatically.
+.br
+
+.br
+Note, that non-fragmented features (like
+.B \-F
+or
+.B \--mtu\fR)
+work properly since the Linux kernel 2.6.22 only.
+Before that version, IPv6 was always fragmented, IPv4 could use
+the once the discovered final mtu only (from the route cache), which can be
+less than the actual mtu of a device.
 .TP
 .BI \-f " first_ttl
 Specifies with what TTL to start. Defaults to 1.
@@ -151,9 +155,16 @@ Specifies with what TTL to start. Defaults to 1.
 Tells traceroute to add an IP source routing option to the outgoing
 packet that tells the network to route the packet through the
 specified
-.IR gateway .
-Not very useful, because most routers have disabled source routing
-for security reasons.
+.IR gateway
+(most routers have disabled source routing for security reasons).
+In general, several
+.IR gateway\fR's
+is allowed (comma separated). For IPv6, the form of
+.IR num\fB,\fIaddr\fB,\fIaddr...
+is allowed, where
+.IR num
+is a route header type (default is type 2). Note the type 0 route header
+is now deprecated (rfc5095).
 .TP
 .BI \-i " interface
 Specifies the interface through which
@@ -183,7 +194,7 @@ For UDP tracing, specifies the destination port base
 .I traceroute
 will use (the destination port number will be incremented by each probe).
 .br
-For ICMP tracing, specifies the initial icmp sequence value (incremented
+For ICMP tracing, specifies the initial ICMP sequence value (incremented
 by each probe too).
 .br
 For TCP specifies just the (constant) destination
@@ -192,7 +203,7 @@ port to connect.
 .BI \-t " tos
 For IPv4, set the Type of Service (TOS) and Precedence value. Useful values
 are 16 (low delay) and 8 (high throughput). Note that in order to use
-some TOS precendence values, you have to be super user.
+some TOS precedence values, you have to be super user.
 .br
 For IPv6, set the Traffic Control value.
 .TP
@@ -217,7 +228,17 @@ By default, the address of the outgoing interface is used.
 Minimal time interval between probes (default 0).
 If the value is more than 10, then it specifies a number in milliseconds,
 else it is a number of seconds (float point values allowed too).
-Useful when some routers use rate-limit for icmp messages.
+Useful when some routers use rate-limit for ICMP messages.
+.TP
+.BI \-e
+Show ICMP extensions (rfc4884). The general form is
+.I CLASS\fB/\fITYPE\fB:
+followed by a hexadecimal dump.
+The MPLS (rfc4950) is shown parsed, in a form:
+.B MPLS:L=\fIlabel\fB,E=\fIexp_use\fB,S=\fIstack_bottom\fB,T=\fITTL
+(more objects separated by
+.B /
+).
 .TP
 .BI \-A
 Perform AS path lookups in routing registries and print results
@@ -234,6 +255,9 @@ There is a couple of additional options, intended for an advanced usage
 Chooses the source port to use. Implies
 .BR \-N\ 1 .
 Normally source ports (if applicable) are chosen by the system.
+.TP
+.B \--fwmark\fR=\fImark
+Set the firewall mark for outgoing packets (since the Linux kernel 2.6.25).
 .TP
 .BI \-M " method
 Use specified method for traceroute operations. Default traditional udp method
@@ -273,6 +297,38 @@ Use UDPLITE for tracerouting (default port is 53).
 .BI \-P " protocol
 Use raw packet of specified protocol for tracerouting. Default protocol is
 253 (rfc3692).
+.TP
+.BI \--mtu
+Discover MTU along the path being traced. Implies
+.BR \-F\ \-N\ 1 .
+New
+.I mtu
+is printed once in a form of
+.B F=\fINUM
+at the first probe of a hop which requires such
+.I mtu
+to be reached. (Actually, the correspond "frag needed" icmp message
+normally is sent by the previous hop).
+.br
+
+.br
+Note, that some routers might cache once the seen information
+on a fragmentation. Thus you can receive the final mtu from a closer hop.
+Try to specify an unusual
+.I tos
+by
+.B \-t
+, this can help for one attempt (then it can be cached there as well).
+.br
+See
+.B \-F
+option for more info.
+.TP
+.BI \--back
+Print the number of backward hops when it seems different with the forward
+direction. This number is guessed in assumption that remote hops send reply
+packets with initial ttl set to either 64, or 128 or 255 (which seems
+a common practice). It is printed as a negate value in a form of '-NUM' .
 .SH LIST OF AVAILABLE METHODS
 In general, a particular traceroute method may have to be chosen by
 .BR \-M\ name ,
@@ -294,6 +350,26 @@ Most usual method for now, which uses icmp echo packets for probes.
 .br
 If you can ping(8) the destination host, icmp tracerouting is applicable
 as well.
+.P
+This method may be allowed for unprivileged users
+since the kernel 3.0 (IPv4 only), which supports new
+.I dgram icmp
+(or
+.IR \fR"\fIping\fR")
+sockets. To allow such sockets, sysadmin should provide
+.I net/ipv4/ping_group_range
+sysctl range to match any group of the user.
+.br
+Options:
+.TP
+.B raw
+Use only raw sockets (the traditional way).
+.br
+This way is tried first by default (for compatibility reasons),
+then new dgram icmp sockets as fallback.
+.TP
+.B dgram
+Use only dgram icmp sockets.
 .SS tcp \  \  \  \ \-T
 Well-known modern method, intended to bypass firewalls.
 .br
@@ -332,7 +408,7 @@ Sets the flags field in the tcp header exactly to
 .TP
 .B ecn
 Send syn packet with tcp flags ECE and CWR (for Explicit Congestion
-Notification, rfc3168)
+Notification, rfc3168).
 .TP
 .B sack,timestamps,window_scaling
 Use the corresponding tcp header option in the outgoing probe packet.
@@ -349,6 +425,11 @@ Use value of
 .I num
 for maxseg tcp header option (when
 .BR syn ).
+.TP
+.B info
+Print tcp flags of final tcp replies when the target host is reached.
+Allows to determine whether an application listens the port and
+other useful things.
 .P
 Default options is
 .BR syn,sysctl .
@@ -427,5 +508,5 @@ command (IPv4, and for nearest 8 hops only).
 .SH SEE ALSO
 .BR ping (8),
 .BR ping6 (8),
-.BR tracepath (8),
+.BR tcpdump (8),
 .BR netstat (8)
