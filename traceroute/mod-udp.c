@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <sys/poll.h>
 #include <netinet/in.h>
+#include <netinet/udp.h>
 
 #include "traceroute.h"
 
@@ -27,21 +28,23 @@
 
 
 static sockaddr_any dest_addr = {{ 0, }, };
-static unsigned short curr_port = 0;
+static unsigned int curr_port = 0;
 static unsigned int protocol = IPPROTO_UDP;
 
 
-static char *data;
-static size_t data_len = 0;
+static char *data = NULL;
+static size_t *length_p;
 
-static void fill_data (packet_len) {
+static void fill_data (size_t *packet_len_p) {
 	int i;
 
-	data_len = packet_len;
-	data = malloc (data_len);
-	if (!data)  error ("malloc");
+	length_p = packet_len_p;
 
-        for (i = 0; i < data_len; i++)
+	if (*length_p &&
+	    !(data = malloc (*length_p))
+	)  error ("malloc");
+
+        for (i = 0; i < *length_p; i++)
                 data[i] = 0x40 + (i & 0x3f);
  
 	return;
@@ -49,35 +52,35 @@ static void fill_data (packet_len) {
 
 
 static int udp_default_init (const sockaddr_any *dest,
-				unsigned int port_seq, size_t packet_len) {
+				unsigned int port_seq, size_t *packet_len_p) {
 
 	curr_port = port_seq ? port_seq : DEF_START_PORT;
 
 	dest_addr = *dest;
 	dest_addr.sin.sin_port = htons (curr_port);
 
-	fill_data (packet_len);
+	fill_data (packet_len_p);
 
 	return 0;
 }
 
 
 static int udp_init (const sockaddr_any *dest,
-				unsigned int port_seq, size_t packet_len) {
+			    unsigned int port_seq, size_t *packet_len_p) {
 
 	dest_addr = *dest;
 
 	if (!port_seq)  port_seq = DEF_UDP_PORT;
 	dest_addr.sin.sin_port = htons ((u_int16_t) port_seq);
 	
-	fill_data (packet_len);
+	fill_data (packet_len_p);
  
 	return 0;
 }
 
 
 static unsigned int coverage = 0;
-#define MIN_COVERAGE	8	/*  just sizeof (struct udphdr)   */
+#define MIN_COVERAGE	(sizeof (struct udphdr))
 
 static void set_coverage (int sk) {
 	int val = MIN_COVERAGE;
@@ -99,7 +102,7 @@ static CLIF_option udplite_options[] = {
 };
 
 static int udplite_init (const sockaddr_any *dest,
-				unsigned int port_seq, size_t packet_len) {
+			    unsigned int port_seq, size_t *packet_len_p) {
 
 	dest_addr = *dest;
 
@@ -110,7 +113,7 @@ static int udplite_init (const sockaddr_any *dest,
 
 	if (!coverage)  coverage = MIN_COVERAGE;
 	
-	fill_data (packet_len);
+	fill_data (packet_len_p);
  
 	return 0;
 }
@@ -139,7 +142,7 @@ static void udp_send_probe (probe *pb, int ttl) {
 
 	pb->send_time = get_time ();
 
-	if (do_send (sk, data, data_len, NULL) < 0) {
+	if (do_send (sk, data, *length_p, NULL) < 0) {
 	    close (sk);
 	    pb->send_time = 0;
 	    return;
@@ -161,72 +164,34 @@ static void udp_send_probe (probe *pb, int ttl) {
 }
 
 
-static void udp_recv_probe (int sk, int revents) {
-	struct msghdr msg;
-	sockaddr_any from;
-	struct iovec iov;
-	char buf[1024];
-	char control[1024];
-	int err;
+static probe *udp_check_reply (int sk, int err, sockaddr_any *from,
+						    char *buf, size_t len) {
 	probe *pb;
 
+	pb = probe_by_sk (sk);
+	if (!pb)  return NULL;
+
+	if (pb->seq != from->sin.sin_port)
+		return NULL;
+
+	if (!err)  pb->final = 1;
+
+	return pb;
+}
+
+
+static void udp_recv_probe (int sk, int revents) {
 
 	if (!(revents & (POLLIN | POLLERR)))
 		return;
 
-	err = !!(revents & POLLERR);
-
-
-	memset (&msg, 0, sizeof (msg));
-
-	msg.msg_name = &from;
-	msg.msg_namelen = sizeof (from);
-	msg.msg_control = control;
-	msg.msg_controllen = sizeof (control);
-        iov.iov_base = buf;
-        iov.iov_len = sizeof (buf);
-        msg.msg_iov = &iov;
-        msg.msg_iovlen = 1;
-
-
-	if (recvmsg (sk, &msg, err ? MSG_ERRQUEUE : 0) < 0)
-		return;
-
-
-	pb = probe_by_sk (sk);
-	if (!pb)  return;
-
-	if (pb->seq != from.sin.sin_port)
-		return;
-
-
-	parse_cmsg (pb, &msg);	    /*  err (if any), tstamp, ttl   */
-
-	if (!err) {
-
-	    memcpy (&pb->res, &from, sizeof (pb->res));
-
-	    pb->final = 1;
-	}
-
-
-	del_poll (sk);
-
-	close (sk);
-	pb->sk = -1;
-
-	pb->done = 1;
+	recv_reply (sk, !!(revents & POLLERR), udp_check_reply);
 }
 
 
 static void udp_expire_probe (probe *pb) {
 
-	del_poll (pb->sk);
-
-	close (pb->sk);
-	pb->sk = -1;
-
-	pb->done = 1;
+	probe_done (pb);
 }
 
 
@@ -238,7 +203,7 @@ static tr_module default_ops = {
 	.send_probe = udp_send_probe,
 	.recv_probe = udp_recv_probe,
 	.expire_probe = udp_expire_probe,
-	.user = 1,
+	.header_len = sizeof (struct udphdr),
 };
 
 TR_MODULE (default_ops);
@@ -250,7 +215,7 @@ static tr_module udp_ops = {
 	.send_probe = udp_send_probe,
 	.recv_probe = udp_recv_probe,
 	.expire_probe = udp_expire_probe,
-	.user = 1,
+	.header_len = sizeof (struct udphdr),
 };
 
 TR_MODULE (udp_ops);
@@ -262,7 +227,7 @@ static tr_module udplite_ops = {
 	.send_probe = udp_send_probe,
 	.recv_probe = udp_recv_probe,
 	.expire_probe = udp_expire_probe,
-	.user = 1,
+	.header_len = sizeof (struct udphdr),
 	.options = udplite_options,
 };
 
